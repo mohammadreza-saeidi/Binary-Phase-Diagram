@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Dec 25 20:55:42 2020
+
+@author: mohammadrezasaeidi
+"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+ls=np.empty((1,3))
+h=np.empty((1,3))
+for T in np.arange(500,1500,50):
+    R=8.314
+    TmA=800
+    TmB=1200
+    deltaGmA=8000-10*T
+    deltaGmB=12000-10*T
+    omegaS=25000
+    omegaL=25000
+    etg=20
+    ey0=50
+    i=0
+    X=np.arange(1e-4,1,1e-4)
+    mindeltaG=np.empty((9999))
+    c=np.empty((9998))
+    d=np.empty((9997))
+
+    if T>TmB:
+        def deltaGML(XLA):
+            return(R*T*(XLA*np.log(XLA)+(1-XLA)*np.log(1-XLA))+omegaL*XLA*(1-XLA))
+        def deltaGMS(XSA):
+            return(-XSA*deltaGmA-(1-XSA)*deltaGmB+R*T*(XSA*np.log(XSA)+(1-XSA)*np.log(1-XSA))+omegaS*XSA*(1-XSA))
+    elif T<=TmB and T>=TmA:
+        def deltaGML(XLA):
+            return((1-XLA)*deltaGmB+R*T*(XLA*np.log(XLA)+(1-XLA)*np.log(1-XLA))+omegaL*XLA*(1-XLA))
+        def deltaGMS(XSA):
+            return(-XSA*deltaGmA+R*T*(XSA*np.log(XSA)+(1-XSA)*np.log(1-XSA))+omegaS*XSA*(1-XSA))
+    else:
+        def deltaGML(XLA):
+            return(XLA*deltaGmA+(1-XLA)*deltaGmB+R*T*(XLA*np.log(XLA)+(1-XLA)*np.log(1-XLA))+omegaL*XLA*(1-XLA))
+        def deltaGMS(XSA):
+            return(R*T*(XSA*np.log(XSA)+(1-XSA)*np.log(1-XSA))+omegaS*XSA*(1-XSA));
+
+    a=deltaGML(X)
+    b=deltaGMS(X)
+    fig1, ax1=plt.subplots(figsize=(10,10))
+    ax1.set_title('T=%i K'%T)
+    ax1.plot(X,a, label='Liquidus')
+    ax1.plot(X,b, label='Solidus')
+    plt.xlabel('XA')
+    plt.ylabel('DeltaGM')
+    plt.xlim([0,1])
+    ax1.legend()
+    plt.savefig('/<your directory>/deltaGMvsXA T=%i K.png'%T);
+
+    while i<=9998:
+        mindeltaG[i]=min(a[i],b[i])
+        i=i+1;
+    i=0
+    while i<=9997:
+        c[i]=((mindeltaG[i+1]-mindeltaG[i])/1e-4)
+        i=i+1;
+    i=0
+    while i<=9996:
+        d[i]=((c[i+1]-c[i])/1e-4)
+        i=i+1;
+    i=0
+    while i<=4998:
+        j=9997
+        while j>=4999:
+            if np.absolute(c[i]-c[j])<=etg and np.absolute((c[j]*X[i]+mindeltaG[j]-c[j]*X[j])-mindeltaG[i])<=ey0 and d[i]>=0 and d[j]>=0:
+                h[0,0]=T
+                h[0,1]=X[i]
+                h[0,2]=X[j]
+                ls=np.concatenate((ls,h),axis=0)
+                j=j-1
+            else:
+                j=j-1;
+        i=i+1;
+ls=ls[1:,:]
+fig2, ax2=plt.subplots(figsize=(10,10))
+ax2.set_title('T vs. XA')
+ax2.plot(ls[:,1:2], ls[:,:1], label='Liquidus', marker='o')
+ax2.plot(ls[:,2:3], ls[:,:1], label='Solidus', marker='o')
+plt.xlabel('XA')
+plt.ylabel('T')
+plt.xlim([0,1])
+ax2.legend()
+plt.savefig('/<your directory>/phase diagram.png')
+            
+   
+            
+            
+    
+    
+ 
